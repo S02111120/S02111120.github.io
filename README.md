@@ -1,4 +1,4 @@
-# [UE5/C++] 탑뷰 로그라이크 개발기: 인벤토리 컴포넌트 설계, Git 충돌 병합 및 보스 보상 드롭 파이프라인 구축
+ # [UE5/C++] 탑뷰 로그라이크 개발기: 인벤토리 컴포넌트 설계, Git 충돌 병합 및 보스 보상 드롭 파이프라인 구축
 
     > **개발 환경**: Unreal Engine 5, C++, Visual Studio 2022, Git
     > **협업 구성**: 3인 (UI 담당 1, 보스 AI/패턴 담당 1, 시스템/인벤토리 담당 본인)
@@ -11,6 +11,7 @@
   먼저 구축했다.
 
     ### 1-1. Data-Driven 아이템 설계 (`UPrimaryDataAsset`)
+
     하드코딩을 방지하고 에디터 친화적인 확장성을 위해 `URLItemDataAsset`을 구현했다.
 
     * `FPrimaryAssetId`를 활용한 에셋 관리
@@ -40,6 +41,7 @@
     };
 
   ### 1-2. 컴포넌트 기반 아키텍처 (URLInventoryComponent)
+
   플레이어 캐릭터(ARLCharacter)의 비대화(Fat Actor)를 방지하고 단일 책임 원칙(SRP)을 준수하기 위해 인벤토리 기능을
   UActorComponent로 격리했다.
   • 인터페이스 분리: AddItem(), UseItem(), RemoveItem() 등의 핵심 API 노출
@@ -54,7 +56,6 @@
 
   플레이어 캐릭터(ARLCharacter.h / RLCharacter.cpp)에 인벤토리 컴포넌트를 통합하는 과정에서, 보스 패턴 담당 팀원의
   공격 예고 데칼(Decal Indicator) 커밋이 원격 브랜치에 먼저 머지되며 코드 충돌이 발생함.
-
   ### 2-2. 해결 과정
 
   1. 헤더 병합 (RLCharacter.h):
@@ -65,6 +66,7 @@
       • 컴포넌트 등록 및 델리게이트 바인딩 시점이 겹치지 않도록 호출 순서 재배열
   3. 로컬 빌드 검증:
       • 언리얼 엔진 핫리로드 대신 에디터 종료 후 Rider/VS 기반 클린 빌드 수행하여 이상 없음 확인
+
 
   │ Engineering Note:
   │ 공용 코어 클래스(Character)를 여러 작업자가 동시에 수정하면 충돌 비용이 급증한다. 핵심 액터는 서브시스템이나
@@ -86,7 +88,6 @@
   • 드롭 테이블 분기:
       • 일반 몬스터: 보상 상자 드롭 로직 제거, 필드 드롭 액터(ARLItemDrop) 확률 계산만 수행
       • 보스 몬스터: 보스 판정 시 위치 벡터를 계산하여 MyRLRewardChest를 100% 확정 스폰하도록 동적 로드 연동
-
     // RLEnemyCharacter.cpp
     void ARLEnemyCharacter::Die()
     {
@@ -117,4 +118,3 @@
   시 대량 경험치(350 EXP)를 즉시 부여하도록 C++ 분기 추가
   [ ] UI 병합 후 엔드투엔드 검증: WBP_RewardSelect 머지 후 [보스 처치 ➡️ 상자 오픈 ➡️ 삼지선다 선택 ➡️ 인벤토리
   반영]의 전체 파이프라인 루프 테스트
-  
