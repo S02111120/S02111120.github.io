@@ -41,6 +41,7 @@
   ### 1-2. 컴포넌트 기반 아키텍처 (URLInventoryComponent)
   플레이어 캐릭터(ARLCharacter)의 비대화(Fat Actor)를 방지하고 단일 책임 원칙(SRP)을 준수하기 위해 인벤토리 기능을
   UActorComponent로 격리했다.
+
   • 인터페이스 분리: AddItem(), UseItem(), RemoveItem() 등의 핵심 API 노출
   • 느슨한 결합(Loose Coupling): 상태 변화 시 호출되는 Dynamic Multicast Delegate를 선언하여, UI 위젯이 컴포넌트를
   직접 참조하지 않고 이벤트 구독 형태로 동작하도록 설계
@@ -53,7 +54,6 @@
 
   플레이어 캐릭터(ARLCharacter.h / RLCharacter.cpp)에 인벤토리 컴포넌트를 통합하는 과정에서, 보스 패턴 담당 팀원의
   공격 예고 데칼(Decal Indicator) 커밋이 원격 브랜치에 먼저 머지되며 코드 충돌이 발생함.
-
   ### 2-2. 해결 과정
 
   1. 헤더 병합 (RLCharacter.h):
@@ -65,6 +65,7 @@
   3. 로컬 빌드 검증:
       • 언리얼 엔진 핫리로드 대신 에디터 종료 후 Rider/VS 기반 클린 빌드 수행하여 이상 없음 확인
 
+
   │ Engineering Note:
   │ 공용 코어 클래스(Character)를 여러 작업자가 동시에 수정하면 충돌 비용이 급증한다. 핵심 액터는 서브시스템이나
   │ 컴포넌트의 컨테이너 역할만 수행하도록 제한하고, 기능 구현은 철저히 컴포넌트로 캡슐화해야 충돌을 최소화할 수 있음을
@@ -73,19 +74,20 @@
   ## 3. 몬스터 사망 및 보상 드롭 파이프라인 리팩토링
 
   ### 3-1. 기존 문제점 (Issue)
+
   • 일반 몬스터 처치 시에도 보상 상자(MyRLRewardChest)가 100% 드롭되는 현상
   • 보스 몬스터(BP_Boss) 처치 시에는 정작 상자가 스폰되지 않는 로직 누락 발생
   ### 3-2. 원인 파악 (RCA)
 
   ARLEnemyCharacter::Die() 함수 내부에서 사망 액터의 타입을 식별하지 않고 일괄 처리되고 있었으며, 상자 스폰 로직이
   보스 전용 분기에 태워지지 않은 상태였음.
+
   ### 3-3. 해결 구현 (RLEnemyCharacter.cpp)
 
   • 보스 런타임 판별: 사망 시점의 액터가 보스(BP_Boss)인지 클래스/태그를 통해 자동 식별
   • 드롭 테이블 분기:
       • 일반 몬스터: 보상 상자 드롭 로직 제거, 필드 드롭 액터(ARLItemDrop) 확률 계산만 수행
       • 보스 몬스터: 보스 판정 시 위치 벡터를 계산하여 MyRLRewardChest를 100% 확정 스폰하도록 동적 로드 연동
-
     // RLEnemyCharacter.cpp
     void ARLEnemyCharacter::Die()
     {
