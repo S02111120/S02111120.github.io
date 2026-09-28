@@ -10,14 +10,13 @@
     UI 작업과의 병렬 개발을 위해, UI 의존성을 배제하고 독립적으로 구동되는 C++ 비즈니스 로직과 데이터 파이프라인을
   먼저 구축했다.
 
-    ### 1-1. Data-Driven 아이템 설계 (`UPrimaryDataAsset`)
+    ### 1-1. Data-Driven 아이템 설계 (UPrimaryDataAsset)
 
-    하드코딩을 방지하고 에디터 친화적인 확장성을 위해 `URLItemDataAsset`을 구현했다.
+    하드코딩을 방지하고 에디터 친화적인 확장성을 위해 URLItemDataAsset을 구현했다.
 
-    * `FPrimaryAssetId`를 활용한 에셋 관리
-    * 아이템 ID, 이름, 설명, 인벤토리 텍스처, 최대 중첩 개수(`MaxStackCount`), 소모품/장비 타입 열거형(`EItemType`)
-  정의
-    * 1차 동작 검증용 테스트 데이터 에셋(`DA_Potion_Health`) 제작
+    * FPrimaryAssetId를 활용한 에셋 관리
+    * 아이템 ID, 이름, 설명, 인벤토리 텍스처, 최대 중첩 개수(MaxStackCount), 소모품/장비 타입 열거형(EItemType) 정의
+    * 1차 동작 검증용 테스트 데이터 에셋(DA_Potion_Health) 제작
 
     ```cpp
     // RLItemDataAsset.h
@@ -39,12 +38,9 @@
         UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Data")
         int32 MaxStack;
     };
-
   ### 1-2. 컴포넌트 기반 아키텍처 (URLInventoryComponent)
-
   플레이어 캐릭터(ARLCharacter)의 비대화(Fat Actor)를 방지하고 단일 책임 원칙(SRP)을 준수하기 위해 인벤토리 기능을
   UActorComponent로 격리했다.
-
   • 인터페이스 분리: AddItem(), UseItem(), RemoveItem() 등의 핵심 API 노출
   • 느슨한 결합(Loose Coupling): 상태 변화 시 호출되는 Dynamic Multicast Delegate를 선언하여, UI 위젯이 컴포넌트를
   직접 참조하지 않고 이벤트 구독 형태로 동작하도록 설계
@@ -57,6 +53,7 @@
 
   플레이어 캐릭터(ARLCharacter.h / RLCharacter.cpp)에 인벤토리 컴포넌트를 통합하는 과정에서, 보스 패턴 담당 팀원의
   공격 예고 데칼(Decal Indicator) 커밋이 원격 브랜치에 먼저 머지되며 코드 충돌이 발생함.
+
   ### 2-2. 해결 과정
 
   1. 헤더 병합 (RLCharacter.h):
@@ -68,7 +65,6 @@
   3. 로컬 빌드 검증:
       • 언리얼 엔진 핫리로드 대신 에디터 종료 후 Rider/VS 기반 클린 빌드 수행하여 이상 없음 확인
 
-
   │ Engineering Note:
   │ 공용 코어 클래스(Character)를 여러 작업자가 동시에 수정하면 충돌 비용이 급증한다. 핵심 액터는 서브시스템이나
   │ 컴포넌트의 컨테이너 역할만 수행하도록 제한하고, 기능 구현은 철저히 컴포넌트로 캡슐화해야 충돌을 최소화할 수 있음을
@@ -77,10 +73,8 @@
   ## 3. 몬스터 사망 및 보상 드롭 파이프라인 리팩토링
 
   ### 3-1. 기존 문제점 (Issue)
-
   • 일반 몬스터 처치 시에도 보상 상자(MyRLRewardChest)가 100% 드롭되는 현상
   • 보스 몬스터(BP_Boss) 처치 시에는 정작 상자가 스폰되지 않는 로직 누락 발생
-
   ### 3-2. 원인 파악 (RCA)
 
   ARLEnemyCharacter::Die() 함수 내부에서 사망 액터의 타입을 식별하지 않고 일괄 처리되고 있었으며, 상자 스폰 로직이
@@ -91,6 +85,7 @@
   • 드롭 테이블 분기:
       • 일반 몬스터: 보상 상자 드롭 로직 제거, 필드 드롭 액터(ARLItemDrop) 확률 계산만 수행
       • 보스 몬스터: 보스 판정 시 위치 벡터를 계산하여 MyRLRewardChest를 100% 확정 스폰하도록 동적 로드 연동
+
     // RLEnemyCharacter.cpp
     void ARLEnemyCharacter::Die()
     {
